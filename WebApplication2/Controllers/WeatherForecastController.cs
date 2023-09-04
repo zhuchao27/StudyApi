@@ -39,34 +39,32 @@ namespace WebApplication2.Controllers
         }
 
         [HttpGet(Name = "GetToken")]
-        public IResult GetToken(User user)
+        public async Task<IResult> GetToken(User user)
         {
-            if (true)//user.UserName == "joydip" && user.Password == "joydip123"
+
+            var issuer = _configuration.GetValue<string>("Jwt:Issuer");// builder.Configuration["Jwt:Issuer"];
+            var audience = _configuration.GetValue<string>("Jwt:Audience");// builder.Configuration["Jwt:Audience"];
+            var key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("Jwt:Key"));//builder.Configuration["Jwt:Key"]
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                var issuer = _configuration.GetValue<string>("Jwt:Issuer");// builder.Configuration["Jwt:Issuer"];
-                var audience = _configuration.GetValue<string>("Jwt:Audience");// builder.Configuration["Jwt:Audience"];
-                var key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("Jwt:Key"));//builder.Configuration["Jwt:Key"]
-                var tokenDescriptor = new SecurityTokenDescriptor
+                Subject = new ClaimsIdentity(new[]
                 {
-                    Subject = new ClaimsIdentity(new[]
-                    {
                       new Claim("Id", Guid.NewGuid().ToString()),
                       new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                       new Claim(JwtRegisteredClaimNames.Email, user.UserName),
                       new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
-                    }),
-                    Expires = DateTime.UtcNow.AddMinutes(20),
-                    Issuer = issuer,
-                    Audience = audience,
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
-                };
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                //var jwtToken = tokenHandler.WriteToken(token);
-                var stringToken = tokenHandler.WriteToken(token);
-                return Results.Ok(stringToken);
-            }
-            return Results.Unauthorized();
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(20),
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            //var jwtToken = tokenHandler.WriteToken(token);
+            var stringToken = tokenHandler.WriteToken(token);
+            return Results.Ok(stringToken);
+
         }
 
         [HttpPost]
